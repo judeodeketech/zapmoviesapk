@@ -1,0 +1,6 @@
+{
+  "name": "ZapMovies - Cinematic Streaming App",
+  "description": "Premium cinematic streaming application for movies and TV series with dark gold theme and Jetpack Compose design language.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
