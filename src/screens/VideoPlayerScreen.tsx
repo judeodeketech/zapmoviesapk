@@ -27,6 +27,7 @@ import {
   markAsCompleted,
   removePlaybackProgress
 } from '../services/vidsrc';
+import { AdBanner } from '../components/ads/AdBanner';
 
 interface VideoPlayerScreenProps {
   media: MediaItem;
@@ -559,6 +560,16 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
                   )}
                 </div>
               </button>
+            </div>
+
+            {/* Bottom Player Ad Placeholder */}
+            <div className="mt-5 pb-6">
+              <AdBanner
+                zoneKey="4b4e471c9bb70321a89ff1db782c427e"
+                width={468}
+                height={60}
+                label="Sponsored Video Ad Zone"
+              />
             </div>
           </div>
         </div>

@@ -13,6 +13,7 @@ import { VideoPlayerScreen } from './screens/VideoPlayerScreen';
 import { WatchlistScreen } from './screens/WatchlistScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { ComposeCodeModal } from './components/code-export/ComposeCodeModal';
+import { StickyBottomAd } from './components/ads/StickyBottomAd';
 import { fetchAllTMDBFeeds, fetchFullMediaDetails, fetchRealContinueWatchingInitial } from './services/tmdb';
 import { getActiveContinueWatchingList } from './services/vidsrc';
 
@@ -560,6 +561,11 @@ export default function App() {
             />
           )}
         </div>
+
+        {/* Sticky Cancellable Bottom Ad (320x50 Ad Zone) */}
+        {currentScreen !== 'splash' && currentScreen !== 'video_player' && (
+          <StickyBottomAd />
+        )}
 
         {/* Persistent Bottom Navigation Bar (Home | Search | Downloads | Watchlist | Profile) */}
         <BottomNavigation

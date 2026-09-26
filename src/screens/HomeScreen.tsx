@@ -8,6 +8,7 @@ import { SeriesCard } from '../components/cards/SeriesCard';
 import { SectionHeader } from '../components/common/SectionHeader';
 import { Bell, Loader2 } from 'lucide-react';
 import { fetchMediaByCategory } from '../services/tmdb';
+import { AdBanner } from '../components/ads/AdBanner';
 
 interface HomeScreenProps {
   mediaList: MediaItem[];
@@ -211,28 +212,40 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               <span className="text-xs text-slate-400">Loading TMDB {selectedCategory}...</span>
             </div>
           ) : categoryMedia && categoryMedia.length > 0 ? (
-            /* Locked 2/3 column grid where cards CANNOT overlap */
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pb-14">
-              {categoryMedia.map((item) =>
-                item.type === 'movie' ? (
-                  <MovieCard
-                    key={item.id}
-                    movie={item}
-                    onClick={onSelectMedia}
-                    isGrid={true}
-                    className="w-full min-w-0"
-                  />
-                ) : (
-                  <SeriesCard
-                    key={item.id}
-                    series={item}
-                    onClick={onSelectMedia}
-                    isGrid={true}
-                    className="w-full min-w-0"
-                  />
-                )
-              )}
-            </div>
+            <>
+              {/* Category Top Ad Zone */}
+              <div className="mb-3">
+                <AdBanner
+                  zoneKey="383e5798db5ea984cad6739ec47ed810"
+                  width={320}
+                  height={50}
+                  label="Category Featured Sponsor"
+                />
+              </div>
+
+              {/* Locked 2/3 column grid where cards CANNOT overlap */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3.5 pb-14">
+                {categoryMedia.map((item) =>
+                  item.type === 'movie' ? (
+                    <MovieCard
+                      key={item.id}
+                      movie={item}
+                      onClick={onSelectMedia}
+                      isGrid={true}
+                      className="w-full min-w-0"
+                    />
+                  ) : (
+                    <SeriesCard
+                      key={item.id}
+                      series={item}
+                      onClick={onSelectMedia}
+                      isGrid={true}
+                      className="w-full min-w-0"
+                    />
+                  )
+                )}
+              </div>
+            </>
           ) : (
             <div className="py-16 text-center text-xs text-slate-500">
               No titles currently available for {selectedCategory}.
@@ -269,6 +282,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             </section>
           )}
+
+          {/* High-Visibility Ad Banner 1 (468x60) */}
+          <div className="px-5 mt-3">
+            <AdBanner
+              zoneKey="4b4e471c9bb70321a89ff1db782c427e"
+              width={468}
+              height={60}
+              label="Featured Spotlight Sponsor"
+            />
+          </div>
 
           {/* Trending Series Carousel with See All */}
           {trendingSeries.length > 0 && (
@@ -310,6 +333,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             </section>
           )}
 
+          {/* High-Visibility Ad Banner 2 (320x50) */}
+          <div className="px-5 mt-3">
+            <AdBanner
+              zoneKey="383e5798db5ea984cad6739ec47ed810"
+              width={320}
+              height={50}
+              label="Trending Movies Sponsor"
+            />
+          </div>
+
           {/* Top Rated Movies with See All */}
           {topRatedMovies.length > 0 && (
             <section className="mt-7">
@@ -349,6 +382,16 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             </section>
           )}
+
+          {/* High-Visibility Ad Banner 3 (468x60) */}
+          <div className="px-5 mt-3">
+            <AdBanner
+              zoneKey="4b4e471c9bb70321a89ff1db782c427e"
+              width={468}
+              height={60}
+              label="Blockbuster Premier Sponsor"
+            />
+          </div>
 
           {/* Popular Blockbusters with See All */}
           {popularMovies.length > 0 && (
