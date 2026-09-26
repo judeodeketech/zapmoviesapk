@@ -489,6 +489,13 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
               </div>
             </section>
           )}
+
+          {/* Footer Credit */}
+          <footer className="mt-10 mb-6 text-center">
+            <span className="text-[11px] text-slate-500 font-medium">
+              ZapMovies Android Version
+            </span>
+          </footer>
         </>
       )}
     </div>

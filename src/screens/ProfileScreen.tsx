@@ -226,12 +226,9 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
       </div>
 
       {/* App Version Info */}
-      <div className="px-5 mt-8 text-center">
+      <div className="px-5 mt-8 pb-4 text-center">
         <span className="text-[11px] text-slate-500 font-medium block">
-          ZapMovies Android v2.6.4 (Jetpack Compose Release)
-        </span>
-        <span className="text-[10px] text-slate-600 font-mono mt-0.5 block">
-          Build ID: ZAP-COMPOSE-2026.09.26
+          ZapMovies Android Version
         </span>
       </div>
     </div>

@@ -70,7 +70,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onEnter }) => {
         />
         <div className="text-center">
           <span className="text-[10px] text-slate-500 font-medium">
-            Powered by Jetpack Compose · Android UI Architecture
+            ZapMovies Android Version
           </span>
         </div>
       </div>
