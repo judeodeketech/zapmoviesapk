@@ -27,32 +27,36 @@ jobs:
         uses: android-actions/setup-android@v3
 
       - name: 4. Make gradlew executable
+        working-directory: android
         run: chmod +x gradlew
 
       - name: 5. Build Android Release APK
         id: build_apk
+        working-directory: android
         run: |
           echo "Building APK with Gradle..."
+          # Build release APK (signed with debug keystore for direct installation on physical phones)
+          # If assembleRelease fails for any reason, automatically fall back to assembleDebug
           if ./gradlew assembleRelease --stacktrace; then
             echo "apk_type=release" >> $GITHUB_OUTPUT
-            echo "apk_path=app/build/outputs/apk/release/app-release.apk" >> $GITHUB_OUTPUT
+            echo "apk_path=android/app/build/outputs/apk/release/app-release.apk" >> $GITHUB_OUTPUT
           else
-            echo "Release build failed, falling back to assembleDebug..."
+            echo "Release build failed or lacked credentials, falling back to assembleDebug..."
             ./gradlew assembleDebug --stacktrace
             echo "apk_type=debug" >> $GITHUB_OUTPUT
-            echo "apk_path=app/build/outputs/apk/debug/app-debug.apk" >> $GITHUB_OUTPUT
+            echo "apk_path=android/app/build/outputs/apk/debug/app-debug.apk" >> $GITHUB_OUTPUT
           fi
 
       - name: 6. Verify APK was generated
         run: |
           echo "Looking for generated APK..."
-          find app/build/outputs/apk -type f -name "*.apk" -ls
+          find android/app/build/outputs/apk -type f -name "*.apk" -ls
 
       - name: 7. Upload ZapMovies-APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ZapMovies-APK
           path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
+            android/app/build/outputs/apk/release/*.apk
+            android/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error

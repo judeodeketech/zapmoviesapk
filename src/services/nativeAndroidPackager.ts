@@ -10,14 +10,14 @@ export async function downloadAndroidProjectZip(
 
   onProgress?.(10, 'Gathering Android project files...');
 
-  // 1. Root configuration files
+  // Top-level build file for ZapMovies
   zip.file(
     'build.gradle.kts',
     `// Top-level build file for ZapMovies
 plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.kotlin.compose) apply false
+    id("com.android.application") version "8.5.2" apply false
+    id("org.jetbrains.kotlin.android") version "2.0.20" apply false
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.20" apply false
 }
 `
   );
@@ -100,7 +100,7 @@ zipStorePath=wrapper/dists
   if (workflowsFolder) {
     workflowsFolder.file(
       'build-apk.yml',
-      `name: Build ZapMovies Installable APK
+      `name: Build ZapMovies Android APK
 on: [push, pull_request, workflow_dispatch]
 jobs:
   build:
@@ -112,12 +112,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
           cache: gradle
+      - uses: android-actions/setup-android@v3
       - run: chmod +x gradlew || true
-      - run: ./gradlew assembleRelease --stacktrace
+      - run: ./gradlew assembleRelease --stacktrace || ./gradlew assembleDebug --stacktrace
       - uses: actions/upload-artifact@v4
         with:
-          name: ZapMovies-Release-APK
-          path: app/build/outputs/apk/release/app-release.apk
+          name: ZapMovies-APK
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
 `
     );
   }
