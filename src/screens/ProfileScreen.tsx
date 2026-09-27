@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MediaItem, ContinueWatchingItem } from '../types';
 import { ContinueWatchingCard } from '../components/cards/ContinueWatchingCard';
+import { downloadAndroidProjectZip } from '../services/nativeAndroidPackager';
 import {
   User,
   ShieldCheck,
@@ -13,7 +14,11 @@ import {
   ChevronRight,
   ExternalLink,
   Code2,
-  Tv
+  Tv,
+  Smartphone,
+  Loader2,
+  CheckCircle2,
+  Share2
 } from 'lucide-react';
 
 interface ProfileScreenProps {
@@ -21,17 +26,38 @@ interface ProfileScreenProps {
   watchlistCount: number;
   onResumeWatching: (item: ContinueWatchingItem) => void;
   onOpenCodeInspector: () => void;
+  onShareApp?: () => void;
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({
   continueWatchingList,
   watchlistCount,
   onResumeWatching,
-  onOpenCodeInspector
+  onOpenCodeInspector,
+  onShareApp
 }) => {
   const [streamQuality, setStreamQuality] = useState('4K Ultra HD (Dolby)');
   const [wifiOnly, setWifiOnly] = useState(true);
   const [notifications, setNotifications] = useState(true);
+  const [isDownloadingAndroid, setIsDownloadingAndroid] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
+
+  const handleDownloadAndroid = async () => {
+    try {
+      setIsDownloadingAndroid(true);
+      setDownloadSuccess(false);
+      await downloadAndroidProjectZip((prog) => {
+        setDownloadProgress(prog);
+      });
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 4000);
+    } catch (e) {
+      console.error('Failed to download Android project:', e);
+    } finally {
+      setIsDownloadingAndroid(false);
+    }
+  };
 
   return (
     <div className="w-full min-h-screen pb-24 bg-[#08080a] text-slate-100 select-none">
@@ -107,28 +133,79 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
         </div>
       )}
 
-      {/* Kotlin + Jetpack Compose Inspector Highlight Banner */}
+      {/* Native Android App (Kotlin & Android SDK) Download & Architecture Card */}
       <div className="px-5 mt-5">
-        <button
-          type="button"
-          onClick={onOpenCodeInspector}
-          className="w-full p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-[#F5B301]/10 to-transparent border border-[#F5B301]/30 flex items-center justify-between text-left group cursor-pointer hover:border-[#F5B301]/60 transition-all shadow-lg"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#F5B301] text-slate-950 flex items-center justify-center font-bold">
-              <Code2 size={20} />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold text-white group-hover:text-[#F5B301] transition-colors">
-                View Jetpack Compose Architecture
-              </h3>
-              <p className="text-[11px] text-slate-400">
-                Explore Kotlin Composables, Theme, Screens & UI Components
-              </p>
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1c1c28] via-[#12121c] to-[#0a0a10] border border-[#F5B301]/30 shadow-xl space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC72C] to-[#F5B301] text-slate-950 flex items-center justify-center font-bold shadow-md shadow-[#F5B301]/25">
+                <Smartphone size={20} />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-white">
+                    ZapMovies Android Native App
+                  </h3>
+                  <span className="px-1.5 py-0.5 rounded-full bg-[#F5B301]/20 text-[#F5B301] text-[9px] font-bold">
+                    Kotlin · SDK 35
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-0.5">
+                  Unsandboxed VidSrc player with Android SDK outbound click blocker
+                </p>
+              </div>
             </div>
           </div>
-          <ChevronRight size={18} className="text-[#F5B301] group-hover:translate-x-1 transition-transform" />
-        </button>
+
+          {/* Action Buttons: 1-Click ZIP Download & Code Inspector */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              disabled={isDownloadingAndroid}
+              onClick={handleDownloadAndroid}
+              className="py-2.5 px-3 rounded-xl bg-gradient-to-r from-[#FFC72C] to-[#F5B301] text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shadow-md hover:brightness-110 active:scale-95 transition-all"
+            >
+              {isDownloadingAndroid ? (
+                <>
+                  <Loader2 size={13} className="animate-spin text-slate-950" />
+                  <span>{downloadProgress}%</span>
+                </>
+              ) : downloadSuccess ? (
+                <>
+                  <CheckCircle2 size={13} className="text-slate-950" />
+                  <span>Downloaded!</span>
+                </>
+              ) : (
+                <>
+                  <Download size={13} />
+                  <span>Download Project (.ZIP)</span>
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={onOpenCodeInspector}
+              className="py-2.5 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs flex items-center justify-center gap-1.5 cursor-pointer transition-colors"
+            >
+              <Code2 size={13} className="text-[#F5B301]" />
+              <span>APK Guide & Code</span>
+            </button>
+          </div>
+
+          {/* Quick Steps to APK */}
+          <div className="pt-2 border-t border-white/5 space-y-1 text-[11px] text-slate-400">
+            <div className="flex items-center justify-between text-slate-300 font-semibold text-[11px]">
+              <span>📱 How to get your standalone .APK:</span>
+              <span className="text-[#F5B301] text-[10px]">Universal (minSdk 24)</span>
+            </div>
+            <p className="text-slate-400 leading-snug">
+              1. Download ZIP & open in <strong>Android Studio</strong><br />
+              2. Click <strong>Build &gt; Build APK(s)</strong> (or run <code className="text-amber-300 bg-white/5 px-1 rounded">./gradlew assembleRelease</code>)<br />
+              3. Install <code className="text-amber-300 bg-white/5 px-1 rounded">app-release.apk</code> directly on your Android phone!
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Streaming & App Preferences */}
@@ -205,6 +282,27 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({
             />
           </button>
         </div>
+
+        {/* Share App with Friends */}
+        {onShareApp && (
+          <div className="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-[#F5B301]/5 to-transparent border border-[#F5B301]/20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Share2 size={18} className="text-[#F5B301]" />
+              <div>
+                <span className="block text-xs font-semibold text-white">Share ZapMovies</span>
+                <span className="text-[11px] text-slate-400">Invite friends & share free 4K streaming</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onShareApp}
+              className="px-3 py-1.5 rounded-xl bg-[#F5B301] hover:bg-amber-300 text-slate-950 text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-md transition-all active:scale-95"
+            >
+              <Share2 size={13} />
+              <span>Share App</span>
+            </button>
+          </div>
+        )}
 
         {/* Storage / Clear Cache */}
         <div className="p-3.5 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">

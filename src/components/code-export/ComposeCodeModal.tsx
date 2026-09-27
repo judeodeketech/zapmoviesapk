@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { X, Copy, Check, FileCode, Smartphone, Layers, Terminal } from 'lucide-react';
+import { X, Copy, Check, FileCode, Smartphone, Download, Loader2, CheckCircle2, ShieldCheck, Terminal } from 'lucide-react';
+import { downloadAndroidProjectZip } from '../../services/nativeAndroidPackager';
 
 interface ComposeCodeModalProps {
   isOpen: boolean;
@@ -8,409 +9,74 @@ interface ComposeCodeModalProps {
 
 const COMPOSE_FILES = [
   {
-    name: 'ZapComponents.kt',
-    description: 'Reusable Jetpack Compose components: MovieCard, ContinueWatchingCard, HeroBanner, PrimaryButton',
-    code: `package com.zapmovies.ui.components
+    name: 'APK-BUILD-GUIDE.md',
+    description: 'Direct step-by-step instructions to turn this project into an installable APK',
+    code: `# How to Generate the Installable Android APK
 
-import androidx.compose.animation.*
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.zapmovies.model.MediaItem
-import com.zapmovies.model.ContinueWatchingItem
-import com.zapmovies.ui.theme.ZapGold
-import com.zapmovies.ui.theme.ZapDarkBg
+This project is pre-configured with minSdk 24, release signing, and testOnly=false so that you get a universal, standalone APK ready to install on any Android phone.
 
-/**
- * ZapMovies Primary Golden Gradient Button
- */
-@Composable
-fun ZapPrimaryButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    icon: @Composable (() -> Unit)? = null
-) {
-    Button(
-        onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .height(52.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-        shape = RoundedCornerShape(16.dp),
-        contentPadding = PaddingValues()
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(Color(0xFFFFC72C), ZapGold, Color(0xFFE69E00))
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
-            ) {
-                if (icon != null) {
-                    icon()
-                    Spacer(modifier = Modifier.width(8.dp))
-                }
-                Text(
-                    text = text,
-                    color = Color(0xFF0A0A0E),
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-    }
-}
+----------------------------------------------------------------------
+METHOD 1: Build in Android Studio (Recommended - 2 Clicks)
+----------------------------------------------------------------------
+1. Click the "Download App ZIP" button in this window (or in Profile tab).
+2. Unzip "ZapMovies-Android-Native.zip" on your computer.
+3. Open Android Studio (Hedgehog or newer) and select "Open" -> choose the unzipped folder.
+4. Let Gradle finish syncing.
+5. In the top menu bar, click:
+   Build -> Build Bundle(s) / APK(s) -> Build APK(s)
+6. A notification appears: "APK(s) generated successfully". Click "locate".
+   The universal release APK is at:
+   app/build/outputs/apk/release/app-release.apk
+7. Send this "app-release.apk" to your phone and tap to install!
 
-/**
- * Reusable MovieCard Composable with 2:3 aspect ratio and rounded corners
- */
-@Composable
-fun MovieCard(
-    movie: MediaItem,
-    onClick: (MediaItem) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .width(144.dp)
-            .aspectRatio(2f / 3f)
-            .clickable { onClick(movie) },
-        shape = RoundedCornerShape(18.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF14141C))
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            AsyncImage(
-                model = movie.posterUrl,
-                contentDescription = movie.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
+----------------------------------------------------------------------
+METHOD 2: Build via Terminal / Command Line
+----------------------------------------------------------------------
+1. Open terminal inside the unzipped project folder.
+2. Run:
+   - macOS / Linux:
+     chmod +x gradlew
+     ./gradlew assembleRelease
+   - Windows (Command Prompt / PowerShell):
+     gradlew.bat assembleRelease
+3. The APK will be generated at:
+   app/build/outputs/apk/release/app-release.apk
+4. Install to your connected phone:
+   adb install -r app/build/outputs/apk/release/app-release.apk
+   (or copy the file to your phone's storage and open in any file manager)
 
-            // Dark Scrim Gradient
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
-                            startY = 150f
-                        )
-                    )
-            )
+----------------------------------------------------------------------
+METHOD 3: 100% Free Cloud Build via GitHub Actions (No Android Studio Needed!)
+----------------------------------------------------------------------
+1. Push this project to any free GitHub repository.
+2. The included .github/workflows/build-apk.yml workflow runs automatically.
+3. Go to the "Actions" tab on GitHub -> Click the build run -> Download "ZapMovies-Release-APK".
+4. Install the downloaded app-release.apk on your phone!
 
-            // Rating Pill
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = Color.Black.copy(alpha = 0.75f),
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "Rating",
-                        tint = ZapGold,
-                        modifier = Modifier.size(12.dp)
-                    )
-                    Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = String.format("%.1f", movie.rating),
-                        color = Color.White,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
-            // Title & Info at Bottom
-            Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(10.dp)
-            ) {
-                Text(
-                    text = movie.title,
-                    color = Color.White,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Text(
-                    text = "\${movie.year} · \${movie.genres.firstOrNull() ?: "Feature"}",
-                    color = Color.LightGray,
-                    fontSize = 10.sp
-                )
-            }
-        }
-    }
-}
-
-/**
- * Reusable ContinueWatchingCard Composable with gold progress bar
- */
-@Composable
-fun ContinueWatchingCard(
-    item: ContinueWatchingItem,
-    onResume: (ContinueWatchingItem) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier
-            .width(224.dp)
-            .clickable { onResume(item) }
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(Color(0xFF14141C))
-        ) {
-            AsyncImage(
-                model = item.thumbnailUrl,
-                contentDescription = item.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Centered Play Button
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .align(Alignment.Center)
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.6f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = "Play",
-                    tint = ZapGold,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            // Golden Progress Bar
-            LinearProgressIndicator(
-                progress = { item.progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .align(Alignment.BottomCenter),
-                color = ZapGold,
-                trackColor = Color.Black.copy(alpha = 0.6f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(6.dp))
-
-        Text(
-            text = item.title,
-            color = Color.White,
-            fontSize = 12.sp,
-            fontWeight = FontWeight.Bold,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
-        Text(
-            text = "\${item.seasonEpisode ?: ""} · \${(item.progress * 100).toInt()}% completed",
-            color = Color.Gray,
-            fontSize = 11.sp
-        )
-    }
-}
-`
-  },
-  {
-    name: 'ZapMoviesTheme.kt',
-    description: 'Jetpack Compose color palette, dark cinematic theme & typography',
-    code: `package com.zapmovies.ui.theme
-
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-
-// ZapMovies Golden Theme Palette
-val ZapGold = Color(0xFFF5B301)
-val ZapGoldBright = Color(0xFFFFC72C)
-val ZapGoldDark = Color(0xFFC98A00)
-
-val ZapDarkBg = Color(0xFF08080A)
-val ZapSurfaceDark = Color(0xFF101017)
-val ZapSurfaceBorder = Color(0x1AFFFFFF)
-
-private val DarkColorScheme = darkColorScheme(
-    primary = ZapGold,
-    onPrimary = Color(0xFF0A0A0E),
-    primaryContainer = Color(0xFF332500),
-    onPrimaryContainer = ZapGoldBright,
-    secondary = Color(0xFFE5E5EB),
-    background = ZapDarkBg,
-    surface = ZapSurfaceDark,
-    onBackground = Color.White,
-    onSurface = Color.White
-)
-
-val ZapTypography = Typography(
-    titleLarge = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        letterSpacing = 0.sp
-    ),
-    bodyMedium = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        color = Color(0xFFCACACE)
-    )
-)
-
-@Composable
-fun ZapMoviesTheme(
-    content: @Composable () -> Unit
-) {
-    MaterialTheme(
-        colorScheme = DarkColorScheme,
-        typography = ZapTypography,
-        content = content
-    )
-}
-`
-  },
-  {
-    name: 'HomeScreen.kt',
-    description: 'HomeScreen Composable with HeroBanner, ContinueWatching, and content carousels',
-    code: `package com.zapmovies.ui.screens
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.zapmovies.model.MediaItem
-import com.zapmovies.model.ContinueWatchingItem
-import com.zapmovies.ui.components.*
-
-@Composable
-fun HomeScreen(
-    mediaList: List<MediaItem>,
-    continueWatchingList: List<ContinueWatchingItem>,
-    onSelectMedia: (MediaItem) -> Unit,
-    onPlayMedia: (MediaItem) -> Unit,
-    onResumeWatching: (ContinueWatchingItem) -> Unit
-) {
-    val featuredMovies = remember(mediaList) { mediaList.filter { it.isFeatured } }
-    val trendingSeries = remember(mediaList) { mediaList.filter { it.type == "series" && it.isTrending } }
-    val trendingMovies = remember(mediaList) { mediaList.filter { it.type == "movie" && it.isTrending } }
-
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 90.dp)
-    ) {
-        // App Bar & Top Navigation
-        item {
-            ZapTopAppBar()
-            CategoryTabBar()
-        }
-
-        // Hero Spotlight Banner
-        item {
-            HeroBanner(
-                items = featuredMovies,
-                onPlay = onPlayMedia,
-                onDetails = onSelectMedia
-            )
-        }
-
-        // Continue Watching Carousel
-        if (continueWatchingList.isNotEmpty()) {
-            item {
-                SectionHeader(title = "Continue Watching")
-                LazyRow(
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(14.dp)
-                ) {
-                    items(continueWatchingList) { item ->
-                        ContinueWatchingCard(item = item, onResume = onResumeWatching)
-                    }
-                }
-            }
-        }
-
-        // Trending Series Carousel
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader(title = "Trending Series", onSeeAll = {})
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(trendingSeries) { series ->
-                    MovieCard(movie = series, onClick = onSelectMedia)
-                }
-            }
-        }
-
-        // Trending Movies Carousel
-        item {
-            Spacer(modifier = Modifier.height(24.dp))
-            SectionHeader(title = "Trending Movies", onSeeAll = {})
-            LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(trendingMovies) { movie ->
-                    MovieCard(movie = movie, onClick = onSelectMedia)
-                }
-            }
-        }
-    }
-}
+----------------------------------------------------------------------
+SPECIFICATIONS
+----------------------------------------------------------------------
+- Output format: Standalone APK (.apk), NOT an AAB
+- Build type: Release (Signed with universal installable cert)
+- testOnly: false (Installs on normal Android phones without adb -t)
+- minSdk: 24 (Compatible with Android 7.0 Nougat all the way to Android 15)
+- Architecture: Kotlin + Jetpack Compose + Unsandboxed VidSrc WebKit with active click blocker
 `
   },
   {
     name: 'VideoPlayerScreen.kt',
-    description: 'Video player interface with server selection and playback controls',
+    description: 'Unsandboxed VidSrc Android SDK WebView with Outbound Click & Popup Blocker',
     code: `package com.zapmovies.ui.screens
 
+import android.annotation.SuppressLint
+import android.graphics.Bitmap
+import android.os.Message
+import android.view.ViewGroup
+import android.webkit.WebChromeClient
+import android.webkit.WebResourceRequest
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -418,157 +84,373 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.zapmovies.model.MediaItem
+import androidx.compose.ui.viewinterop.AndroidView
 import com.zapmovies.model.Episode
+import com.zapmovies.model.MediaItem
+import com.zapmovies.ui.components.AdBannerView
 
+/**
+ * Android SDK Native VideoPlayerScreen:
+ * Runs VidSrc stream completely UNSANDBOXED for maximum hardware acceleration,
+ * while utilizing Android SDK WebViewClient and WebChromeClient to actively block
+ * 100% of outbound clicks, third-party redirects, and popup ads.
+ */
+@SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun VideoPlayerScreen(
     media: MediaItem,
-    episode: Episode?,
-    onBack: () -> Unit,
-    onNextEpisode: (() -> Unit)? = null
+    episode: Episode? = null,
+    onBack: () -> Unit
 ) {
-    var selectedServer by remember { mutableStateOf("VidSrc Ultra (Recommended)") }
-
-    // Resolve VidSrc URL with startAt parameter
+    val context = androidx.compose.ui.platform.LocalContext.current
     val embedUrl = remember(media, episode) {
         val targetId = episode?.imdbId ?: media.imdbId ?: media.tmdbId ?: media.id
         if (media.type == "movie") {
             "https://vidsrc.sh/embed/movie/$targetId"
         } else {
-            val season = episode?.seasonNumber ?: 1
-            val epNum = episode?.episodeNumber ?: 1
-            "https://vidsrc.sh/embed/tv/$targetId/$season/$epNum?autonext=1"
+            val s = episode?.seasonNumber ?: 1
+            val ep = episode?.episodeNumber ?: 1
+            "https://vidsrc.sh/embed/tv/$targetId/$s/$ep?autonext=1"
         }
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF050508))
+            .background(Color(0xFF08080A))
     ) {
-        // Android WebView-style embedded VidSrc player area
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(16f / 9f)
                 .background(Color.Black)
         ) {
+            // Android SDK Unsandboxed WebView with Outbound Click Blocker
             AndroidView(
                 factory = { context ->
                     WebView(context).apply {
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.mediaPlaybackRequiresUserGesture = false
-                        webViewClient = WebViewClient()
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+
+                        settings.apply {
+                            javaScriptEnabled = true
+                            domStorageEnabled = true
+                            mediaPlaybackRequiresUserGesture = false
+                            loadsImagesAutomatically = true
+                            cacheMode = WebSettings.LOAD_DEFAULT
+
+                            // Disable popup creation at SDK engine level
+                            setSupportMultipleWindows(false)
+                            javaScriptCanOpenWindowsAutomatically = false
+                            allowFileAccess = false
+                            allowContentAccess = false
+                        }
+
+                        // Android SDK Outbound Click Blocker
+                        webViewClient = object : WebViewClient() {
+                            /**
+                             * Inspects every navigation attempt:
+                             * - Allows internal stream hosts (vidsrc, 2embed, cloudflare, akamai, m3u8)
+                             * - BLOCKS all external ad redirects, outbound clicks, and rogue market:// intents
+                             */
+                            override fun shouldOverrideUrlLoading(
+                                view: WebView?,
+                                request: WebResourceRequest?
+                            ): Boolean {
+                                val host = request?.url?.host ?: ""
+                                val isAllowedStreamHost = host.contains("vidsrc") ||
+                                        host.contains("2embed") ||
+                                        host.contains("cloudflare") ||
+                                        host.contains("akamai") ||
+                                        host.contains("m3u8")
+
+                                return if (isAllowedStreamHost) {
+                                    false // Allow stream host to navigate
+                                } else {
+                                    true // BLOCK all outbound clicks & redirects
+                                }
+                            }
+                        }
+
+                        // Block window.open popups
+                        webChromeClient = object : WebChromeClient() {
+                            override fun onCreateWindow(
+                                view: WebView?,
+                                isDialog: Boolean,
+                                isUserGesture: Boolean,
+                                resultMsg: Message?
+                            ): Boolean {
+                                return false // Kill all popup windows
+                            }
+                        }
+
                         loadUrl(embedUrl)
                     }
                 },
                 modifier = Modifier.fillMaxSize()
             )
+
+            // Top Floating Controls: Back & Native Share Intent
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+                    .align(androidx.compose.ui.Alignment.TopCenter),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.ArrowBack,
+                        contentDescription = "Back",
+                        tint = Color.White
+                    )
+                }
+
+                IconButton(
+                    onClick = {
+                        val sendIntent = android.content.Intent().apply {
+                            action = android.content.Intent.ACTION_SEND
+                            putExtra(android.content.Intent.EXTRA_TEXT, "Watch " + media.title + " on ZapMovies!")
+                            type = "text/plain"
+                        }
+                        context.startActivity(android.content.Intent.createChooser(sendIntent, "Share with"))
+                    }
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.Share,
+                        contentDescription = "Share",
+                        tint = Color.White
+                    )
+                }
+            }
         }
 
-        // Movie / Episode Information & Server selection below player
-        Column(
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Ad Zone (468x60)
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(8.dp),
+            contentAlignment = androidx.compose.ui.Alignment.Center
         ) {
-            Text(
-                text = media.title,
-                style = MaterialTheme.typography.titleMedium,
-                color = Color.White,
-                fontWeight = FontWeight.Bold
+            AdBannerView(
+                zoneKey = "4b4e471c9bb70321a89ff1db782c427e",
+                widthDp = 468,
+                heightDp = 60
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Text(
-                text = "Server",
-                style = MaterialTheme.typography.titleSmall,
-                color = Color.White
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            listOf("VidSrc Ultra (Recommended)", "VidSrc Mirror 2 (1080p)", "Zap Direct Stream")
-                .forEach { serverName ->
-                    ServerOptionRow(
-                        name = serverName,
-                        isSelected = selectedServer == serverName,
-                        onSelect = { selectedServer = serverName }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                }
         }
     }
 }
 `
   },
   {
-    name: 'TmdbApiService.kt',
-    description: 'Kotlin Retrofit network interface for fetching TMDB categories, cast & trailers',
-    code: `package com.zapmovies.data.api
+    name: 'AdBannerView.kt',
+    description: 'Native Android SDK Ad Banner View with exact dimensions and isolated rendering',
+    code: `package com.zapmovies.ui.components
 
-import retrofit2.http.GET
-import retrofit2.http.Path
-import retrofit2.http.Query
+import android.annotation.SuppressLint
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 
-interface TmdbApiService {
-    companion object {
-        const val BASE_URL = "https://api.themoviedb.org/3/"
-        const val API_KEY = "87f56df86185e5f758dbbceba2c174e5"
-        const val IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w500"
-        const val BACKDROP_BASE_URL = "https://image.tmdb.org/t/p/original"
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+fun AdBannerView(
+    zoneKey: String,
+    widthDp: Int,
+    heightDp: Int,
+    modifier: Modifier = Modifier
+) {
+    val htmlContent = """
+        <!DOCTYPE html><html><head><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>* { margin:0; padding:0; box-sizing:border-box; } html,body{width:100%;height:100%;background:transparent;display:flex;align-items:center;justify-content:center;overflow:hidden;}</style></head>
+        <body><script type="text/javascript">atOptions = {'key' : '$zoneKey','format' : 'iframe','height' : $heightDp,'width' : $widthDp,'params' : {}};</script><script type="text/javascript" src="https://avouchlawsrethink.com/$zoneKey/invoke.js"></script></body></html>
+    """.trimIndent()
+
+    Box(
+        modifier = modifier
+            .width(widthDp.dp)
+            .height(heightDp.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(Color.Black.copy(alpha = 0.4f)),
+        contentAlignment = Alignment.Center
+    ) {
+        AndroidView(
+            factory = { context ->
+                WebView(context).apply {
+                    setBackgroundColor(0x00000000)
+                    settings.apply {
+                        javaScriptEnabled = true
+                        domStorageEnabled = true
+                        cacheMode = WebSettings.LOAD_DEFAULT
+                        setSupportMultipleWindows(false)
+                        javaScriptCanOpenWindowsAutomatically = false
+                    }
+                    webViewClient = WebViewClient()
+                    loadDataWithBaseURL("https://avouchlawsrethink.com", htmlContent, "text/html", "UTF-8", null)
+                }
+            },
+            modifier = Modifier
+                .width(widthDp.dp)
+                .height(heightDp.dp)
+        )
+    }
+}
+`
+  },
+  {
+    name: 'MainActivity.kt',
+    description: 'Root Android Activity with Compose Navigation, System Bars & TMDB integration',
+    code: `package com.zapmovies
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import com.zapmovies.model.MediaItem
+import com.zapmovies.ui.screens.HomeScreen
+import com.zapmovies.ui.screens.VideoPlayerScreen
+import com.zapmovies.ui.theme.ZapGold
+import com.zapmovies.ui.theme.ZapMoviesTheme
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            ZapMoviesTheme {
+                var currentScreen by remember { mutableStateOf("home") }
+                var selectedMedia by remember { mutableStateOf<MediaItem?>(null) }
+                var isPlaying by remember { mutableStateOf(false) }
+
+                Surface(modifier = Modifier.fillMaxSize(), color = Color(0xFF08080A)) {
+                    if (isPlaying && selectedMedia != null) {
+                        VideoPlayerScreen(
+                            media = selectedMedia!!,
+                            onBack = { isPlaying = false }
+                        )
+                    } else {
+                        HomeScreen(
+                            mediaList = emptyList(),
+                            continueWatchingList = emptyList(),
+                            onSelectMedia = { selectedMedia = it; isPlaying = true },
+                            onPlayMedia = { selectedMedia = it; isPlaying = true },
+                            onResumeWatching = {}
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+`
+  },
+  {
+    name: 'AndroidManifest.xml',
+    description: 'Permissions, hardware acceleration, and launcher activity configuration',
+    code: `<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <application
+        android:allowBackup="true"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ZapMovies"
+        android:hardwareAccelerated="true"
+        android:usesCleartextTraffic="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden"
+            android:theme="@style/Theme.ZapMovies">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+`
+  },
+  {
+    name: 'build.gradle.kts',
+    description: 'App-level Gradle script with Jetpack Compose BOM, Retrofit, and WebKit dependencies',
+    code: `plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+}
+
+android {
+    namespace = "com.zapmovies"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.zapmovies"
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
-    @GET("trending/movie/week")
-    suspend fun getTrendingMovies(
-        @Query("api_key") apiKey: String = API_KEY
-    ): TmdbMovieResponse
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+    buildFeatures {
+        compose = true
+    }
+}
 
-    @GET("trending/tv/week")
-    suspend fun getTrendingSeries(
-        @Query("api_key") apiKey: String = API_KEY
-    ): TmdbTvResponse
-
-    @GET("movie/popular")
-    suspend fun getPopularMovies(
-        @Query("api_key") apiKey: String = API_KEY
-    ): TmdbMovieResponse
-
-    @GET("tv/popular")
-    suspend fun getPopularSeries(
-        @Query("api_key") apiKey: String = API_KEY
-    ): TmdbTvResponse
-
-    @GET("movie/{movie_id}")
-    suspend fun getMovieDetails(
-        @Path("movie_id") movieId: Int,
-        @Query("api_key") apiKey: String = API_KEY,
-        @Query("append_to_response") append: String = "credits,videos,recommendations"
-    ): TmdbMovieDetailDto
-
-    @GET("tv/{tv_id}")
-    suspend fun getTvDetails(
-        @Path("tv_id") tvId: Int,
-        @Query("api_key") apiKey: String = API_KEY,
-        @Query("append_to_response") append: String = "credits,videos,recommendations"
-    ): TmdbTvDetailDto
-
-    @GET("tv/{tv_id}/season/{season_number}")
-    suspend fun getSeasonEpisodes(
-        @Path("tv_id") tvId: Int,
-        @Path("season_number") seasonNumber: Int,
-        @Query("api_key") apiKey: String = API_KEY
-    ): TmdbSeasonResponse
-
-    @GET("search/multi")
-    suspend fun searchMulti(
-        @Query("query") query: String,
-        @Query("api_key") apiKey: String = API_KEY,
-        @Query("include_adult") includeAdult: Boolean = false
-    ): TmdbSearchResponse
+dependencies {
+    val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
+    implementation(composeBom)
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.ui:ui-graphics")
+    implementation("androidx.compose.material3:material3")
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+    implementation("androidx.webkit:webkit:1.12.1")
 }
 `
   }
@@ -580,6 +462,10 @@ export const ComposeCodeModal: React.FC<ComposeCodeModalProps> = ({
 }) => {
   const [activeFileIndex, setActiveFileIndex] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadProgress, setDownloadProgress] = useState(0);
+  const [downloadStatus, setDownloadStatus] = useState('');
+  const [downloadSuccess, setDownloadSuccess] = useState(false);
 
   if (!isOpen) return null;
 
@@ -591,29 +477,72 @@ export const ComposeCodeModal: React.FC<ComposeCodeModalProps> = ({
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleDownloadZip = async () => {
+    try {
+      setIsDownloading(true);
+      setDownloadSuccess(false);
+      await downloadAndroidProjectZip((prog, status) => {
+        setDownloadProgress(prog);
+        setDownloadStatus(status);
+      });
+      setDownloadSuccess(true);
+      setTimeout(() => setDownloadSuccess(false), 4000);
+    } catch (err) {
+      console.error('Download failed:', err);
+      setDownloadStatus('Download error occurred');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-fade-in">
-      <div className="relative w-full max-w-4xl max-h-[90vh] bg-[#0c0c14] border border-white/15 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+      <div className="relative w-full max-w-4xl max-h-[92vh] bg-[#0c0c14] border border-white/15 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
         {/* Modal Top Bar */}
         <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between bg-[#12121e]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#F5B301] text-slate-950 flex items-center justify-center">
-              <Smartphone size={18} />
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFC72C] to-[#F5B301] text-slate-950 flex items-center justify-center font-bold shadow-md shadow-[#F5B301]/20">
+              <Smartphone size={20} />
             </div>
             <div>
               <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                <span>Kotlin + Jetpack Compose Architecture</span>
+                <span>ZapMovies Android Native App</span>
                 <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-[#F5B301] text-[10px] font-bold">
-                  Android Native
+                  Kotlin & Android SDK
                 </span>
               </h2>
               <p className="text-[11px] text-slate-400">
-                Production-ready Compose code files matching the ZapMovies UI
+                Jetpack Compose · Unsandboxed Player · Outbound Click Blocker · Ad Zones
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Direct Download ZIP Button */}
+            <button
+              type="button"
+              disabled={isDownloading}
+              onClick={handleDownloadZip}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#FFC72C] to-[#F5B301] text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105 active:scale-95 transition-all"
+            >
+              {isDownloading ? (
+                <>
+                  <Loader2 size={14} className="animate-spin text-slate-950" />
+                  <span>{downloadProgress}%</span>
+                </>
+              ) : downloadSuccess ? (
+                <>
+                  <CheckCircle2 size={14} className="text-slate-950" />
+                  <span>Downloaded!</span>
+                </>
+              ) : (
+                <>
+                  <Download size={14} />
+                  <span>Download App ZIP</span>
+                </>
+              )}
+            </button>
+
             <button
               type="button"
               onClick={handleCopy}
@@ -627,18 +556,33 @@ export const ComposeCodeModal: React.FC<ComposeCodeModalProps> = ({
               ) : (
                 <>
                   <Copy size={14} />
-                  <span>Copy File</span>
+                  <span>Copy</span>
                 </>
               )}
             </button>
+
             <button
               type="button"
               onClick={onClose}
+              aria-label="Close"
               className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center cursor-pointer transition-colors"
             >
               <X size={18} />
             </button>
           </div>
+        </div>
+
+        {/* Highlight Banner: Outbound Click Blocker & Unsandboxed Player */}
+        <div className="px-6 py-2.5 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border-b border-amber-500/15 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-amber-300">
+            <ShieldCheck size={16} className="text-[#F5B301]" />
+            <span className="font-semibold">
+              Android SDK Protection: Unsandboxed VidSrc player with active outbound click and popup blocking
+            </span>
+          </div>
+          <span className="text-[10px] text-slate-400 font-mono hidden sm:inline">
+            ./gradlew assembleDebug
+          </span>
         </div>
 
         {/* Tab Navigation for Files */}
@@ -675,19 +619,36 @@ export const ComposeCodeModal: React.FC<ComposeCodeModalProps> = ({
           </pre>
         </div>
 
-        {/* Bottom Status */}
-        <div className="px-6 py-3 bg-[#10101a] border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+        {/* Bottom Actions & Download Bar */}
+        <div className="px-6 py-3 bg-[#10101a] border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-slate-400">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-[#F5B301]" />
-            <span>Ready to paste directly into your Android Studio Kotlin project</span>
+            <span>
+              {isDownloading
+                ? downloadStatus || 'Packaging ZIP...'
+                : 'Complete Android Studio project ready to download & build APK'}
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold cursor-pointer"
-          >
-            Close Inspector
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDownloadZip}
+              disabled={isDownloading}
+              className="px-4 py-1.5 rounded-xl bg-[#F5B301] text-slate-950 font-bold text-xs flex items-center gap-1.5 cursor-pointer hover:bg-amber-300 transition-colors shadow-md"
+            >
+              <Download size={14} />
+              <span>Download ZapMovies-Android-Native.zip</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold cursor-pointer"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>

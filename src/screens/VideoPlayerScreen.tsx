@@ -18,7 +18,8 @@ import {
   Film,
   Tv,
   Eye,
-  Sliders
+  Sliders,
+  Share2
 } from 'lucide-react';
 import {
   buildVidSrcEmbedUrl,
@@ -39,6 +40,7 @@ interface VideoPlayerScreenProps {
   onToggleWatchlist?: (media: MediaItem) => void;
   isInWatchlist?: boolean;
   onPlaybackUpdate?: () => void;
+  onShare?: (media: MediaItem, episode?: Episode, seasonNumber?: number) => void;
 }
 
 export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
@@ -50,7 +52,8 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
   hasNextEpisode = false,
   onToggleWatchlist,
   isInWatchlist = false,
-  onPlaybackUpdate
+  onPlaybackUpdate,
+  onShare
 }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [selectedServer, setSelectedServer] = useState<'vidsrc' | 'vidsrc-mirror' | 'zap-direct'>('vidsrc');
@@ -70,6 +73,12 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
   // Track playback time in seconds
   const [playbackSeconds, setPlaybackSeconds] = useState<number>(initialStartAt);
   const [totalDuration, setTotalDuration] = useState<number>(savedRecord?.duration || 120 * 60);
+
+  // References to prevent state updates from running inside functional updaters
+  const playbackSecondsRef = useRef(playbackSeconds);
+  playbackSecondsRef.current = playbackSeconds;
+  const totalDurationRef = useRef(totalDuration);
+  totalDurationRef.current = totalDuration;
 
   // Generate VidSrc URL
   const [embedUrl, setEmbedUrl] = useState<string>(() =>
@@ -135,11 +144,15 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
       });
 
       if (onPlaybackUpdate) {
-        onPlaybackUpdate();
+        setTimeout(() => {
+          onPlaybackUpdate();
+        }, 0);
       }
 
       if (isComplete && hasNextEpisode && autoplayNext && onNextEpisode) {
-        onNextEpisode();
+        setTimeout(() => {
+          onNextEpisode();
+        }, 0);
       }
     },
     [media, episode, effectiveSeason, effectiveEpisode, onPlaybackUpdate, hasNextEpisode, autoplayNext, onNextEpisode]
@@ -162,17 +175,27 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
           const duration = payload.duration || payload.total;
 
           if (typeof currentTime === 'number' && currentTime > 0) {
+            playbackSecondsRef.current = currentTime;
             setPlaybackSeconds(currentTime);
-            const dur = typeof duration === 'number' && duration > 0 ? duration : totalDuration;
-            if (dur > 0) setTotalDuration(dur);
+            const dur = typeof duration === 'number' && duration > 0 ? duration : totalDurationRef.current;
+            if (dur > 0) {
+              totalDurationRef.current = dur;
+              setTotalDuration(dur);
+            }
             recordProgress(currentTime, dur);
           }
 
           if (payload.event === 'ended' || payload.status === 'completed') {
             markAsCompleted(media.id, effectiveSeason, effectiveEpisode);
-            if (onPlaybackUpdate) onPlaybackUpdate();
+            if (onPlaybackUpdate) {
+              setTimeout(() => {
+                onPlaybackUpdate();
+              }, 0);
+            }
             if (hasNextEpisode && autoplayNext && onNextEpisode) {
-              onNextEpisode();
+              setTimeout(() => {
+                onNextEpisode();
+              }, 0);
             }
           }
         }
@@ -185,22 +208,49 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [recordProgress, media.id, effectiveSeason, effectiveEpisode, onPlaybackUpdate, hasNextEpisode, autoplayNext, onNextEpisode, totalDuration]);
+  }, [recordProgress, media.id, effectiveSeason, effectiveEpisode, onPlaybackUpdate, hasNextEpisode, autoplayNext, onNextEpisode]);
+
+  // Android SDK & Web Outbound Click & Popup Interceptor
+  useEffect(() => {
+    // 1. Intercept popup windows without breaking internal functions
+    const originalOpen = window.open;
+    window.open = (url?: string | URL, target?: string, features?: string) => {
+      // In Android SDK WebView / native app, trigger AndroidBridge or drop outbound navigation
+      if ((window as any).AndroidBridge?.onOutboundClickBlocked) {
+        (window as any).AndroidBridge.onOutboundClickBlocked(url?.toString() || '');
+      }
+      return null;
+    };
+
+    // 2. Prevent top-level redirect frame-busting from iframe ads
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (document.activeElement?.tagName === 'IFRAME') {
+        e.preventDefault();
+        return (e.returnValue = '');
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      window.open = originalOpen;
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, []);
 
   // Periodic fallback heartbeat timer while watching to guarantee progress saving
   useEffect(() => {
     if (isLoading || hasError) return;
 
     const interval = setInterval(() => {
-      setPlaybackSeconds((prev) => {
-        const next = prev + 5;
-        recordProgress(next, totalDuration);
-        return next;
-      });
+      const next = playbackSecondsRef.current + 5;
+      playbackSecondsRef.current = next;
+      setPlaybackSeconds(next);
+      recordProgress(next, totalDurationRef.current);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [isLoading, hasError, totalDuration, recordProgress]);
+  }, [isLoading, hasError, recordProgress]);
 
   // Handle retry
   const handleRetry = () => {
@@ -302,6 +352,18 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
               </span>
             )}
 
+            {/* Share button */}
+            {onShare && (
+              <button
+                type="button"
+                onClick={() => onShare(media, episode, effectiveSeason)}
+                aria-label="Share stream"
+                className="w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 border border-white/20 flex items-center justify-center cursor-pointer text-white hover:text-[#F5B301] transition-transform active:scale-95"
+              >
+                <Share2 size={14} />
+              </button>
+            )}
+
             {/* Landscape / Fullscreen Toggle */}
             <button
               type="button"
@@ -390,7 +452,7 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
             </p>
           </div>
 
-          {/* Action Row: Watchlist & Next Episode */}
+          {/* Action Row: Watchlist, Share & Next Episode */}
           <div className="flex items-center gap-2.5">
             {onToggleWatchlist && (
               <button
@@ -410,9 +472,20 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
                 ) : (
                   <>
                     <Bookmark size={16} />
-                    <span>Add to Watchlist</span>
+                    <span>Watchlist</span>
                   </>
                 )}
+              </button>
+            )}
+
+            {onShare && (
+              <button
+                type="button"
+                onClick={() => onShare(media, episode, effectiveSeason)}
+                className="h-11 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white flex items-center justify-center gap-2 text-xs font-semibold transition-all cursor-pointer active:scale-95"
+              >
+                <Share2 size={15} className="text-[#F5B301]" />
+                <span>Share</span>
               </button>
             )}
 
@@ -563,12 +636,11 @@ export const VideoPlayerScreen: React.FC<VideoPlayerScreenProps> = ({
             </div>
 
             {/* Bottom Player Ad Placeholder */}
-            <div className="mt-5 pb-6">
+            <div className="mt-3 pb-2">
               <AdBanner
                 zoneKey="4b4e471c9bb70321a89ff1db782c427e"
                 width={468}
                 height={60}
-                label="Sponsored Video Ad Zone"
               />
             </div>
           </div>

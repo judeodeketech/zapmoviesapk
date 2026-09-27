@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="zap_gold">#F5B301</color>
+    <color name="zap_gold_light">#FFC72C</color>
+    <color name="zap_dark_bg">#08080A</color>
+    <color name="zap_card_bg">#111118</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+</resources>

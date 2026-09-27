@@ -13,6 +13,7 @@ import { VideoPlayerScreen } from './screens/VideoPlayerScreen';
 import { WatchlistScreen } from './screens/WatchlistScreen';
 import { ProfileScreen } from './screens/ProfileScreen';
 import { ComposeCodeModal } from './components/code-export/ComposeCodeModal';
+import { ShareModal } from './components/common/ShareModal';
 import { StickyBottomAd } from './components/ads/StickyBottomAd';
 import { fetchAllTMDBFeeds, fetchFullMediaDetails, fetchRealContinueWatchingInitial } from './services/tmdb';
 import { getActiveContinueWatchingList } from './services/vidsrc';
@@ -117,6 +118,32 @@ export default function App() {
   // Jetpack Compose Code Inspector Modal state
   const [isCodeInspectorOpen, setIsCodeInspectorOpen] = useState(false);
 
+  // Share Modal state
+  const [shareModalState, setShareModalState] = useState<{
+    isOpen: boolean;
+    media: MediaItem | null;
+    episode: Episode | null;
+    seasonNumber?: number;
+  }>({
+    isOpen: false,
+    media: null,
+    episode: null,
+    seasonNumber: 1
+  });
+
+  const handleOpenShare = (media?: MediaItem | null, episode?: Episode | null, seasonNumber?: number) => {
+    setShareModalState({
+      isOpen: true,
+      media: media || selectedMedia,
+      episode: episode || selectedEpisode,
+      seasonNumber: seasonNumber || selectedSeasonNumber
+    });
+  };
+
+  const handleCloseShare = () => {
+    setShareModalState((prev) => ({ ...prev, isOpen: false }));
+  };
+
   // Fetch real TMDB feeds and real Continue Watching data on mount
   useEffect(() => {
     let isMounted = true;
@@ -161,6 +188,34 @@ export default function App() {
           // Prepopulate watchlist with real trending movie & series
           if (feeds.trendingMovies.length > 0 && feeds.trendingSeries.length > 0) {
             setWatchlist([feeds.trendingMovies[0], feeds.trendingSeries[0]]);
+          }
+
+          // Check if user opened a shared deep link like ?watch=tmdb-movie-533535 or &s=1&e=2
+          try {
+            const urlParams = new URLSearchParams(window.location.search);
+            const watchId = urlParams.get('watch');
+            if (watchId) {
+              const matchedMedia = feeds.allMedia.find((m) => m.id === watchId) || MOCK_MEDIA.find((m) => m.id === watchId);
+              if (matchedMedia) {
+                setSelectedMedia(matchedMedia);
+                const sParam = urlParams.get('s');
+                const eParam = urlParams.get('e');
+                if (matchedMedia.type === 'series') {
+                  const sNum = sParam ? parseInt(sParam, 10) : 1;
+                  const eNum = eParam ? parseInt(eParam, 10) : 1;
+                  setSelectedSeasonNumber(sNum);
+                  const epObj = matchedMedia.seasons
+                    ?.find((s) => s.seasonNumber === sNum)
+                    ?.episodes.find((e) => e.episodeNumber === eNum);
+                  if (epObj) {
+                    setSelectedEpisode(epObj);
+                  }
+                }
+                setCurrentScreen('video_player');
+              }
+            }
+          } catch (e) {
+            console.debug('Deep link parse error:', e);
           }
         }
       } catch (err) {
@@ -469,6 +524,7 @@ export default function App() {
               onToggleWatchlist={handleToggleWatchlist}
               isInWatchlist={isInWatchlist}
               onNavigate={setCurrentScreen}
+              onShare={handleOpenShare}
             />
           )}
 
@@ -501,6 +557,7 @@ export default function App() {
               isInWatchlist={isInWatchlist(selectedMedia.id)}
               onDownloadMovie={handleDownloadMovie}
               isDownloaded={downloadedMedia.some((d) => d.mediaId === selectedMedia.id)}
+              onShare={handleOpenShare}
             />
           )}
 
@@ -519,6 +576,7 @@ export default function App() {
               downloadedEpisodeIds={downloadedMedia
                 .filter((d) => d.mediaId === selectedMedia.id)
                 .map((d) => d.id.replace('dl-', ''))}
+              onShare={handleOpenShare}
             />
           )}
 
@@ -539,6 +597,7 @@ export default function App() {
               onToggleWatchlist={handleToggleWatchlist}
               isInWatchlist={isInWatchlist(selectedMedia.id)}
               onPlaybackUpdate={refreshContinueWatching}
+              onShare={handleOpenShare}
             />
           )}
 
@@ -558,6 +617,7 @@ export default function App() {
               watchlistCount={watchlist.length}
               onResumeWatching={handleResumeWatching}
               onOpenCodeInspector={() => setIsCodeInspectorOpen(true)}
+              onShareApp={() => handleOpenShare(null)}
             />
           )}
         </div>
@@ -579,6 +639,15 @@ export default function App() {
         <ComposeCodeModal
           isOpen={isCodeInspectorOpen}
           onClose={() => setIsCodeInspectorOpen(false)}
+        />
+
+        {/* Global Share Feature Modal */}
+        <ShareModal
+          isOpen={shareModalState.isOpen}
+          onClose={handleCloseShare}
+          media={shareModalState.media}
+          episode={shareModalState.episode}
+          seasonNumber={shareModalState.seasonNumber}
         />
       </div>
     </PhoneFrame>

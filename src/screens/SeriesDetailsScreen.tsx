@@ -28,6 +28,7 @@ interface SeriesDetailsScreenProps {
   isInWatchlist: boolean;
   onDownloadEpisode?: (series: MediaItem, episode: Episode) => void;
   downloadedEpisodeIds?: string[];
+  onShare?: (series: MediaItem) => void;
 }
 
 export const SeriesDetailsScreen: React.FC<SeriesDetailsScreenProps> = ({
@@ -39,7 +40,8 @@ export const SeriesDetailsScreen: React.FC<SeriesDetailsScreenProps> = ({
   onToggleWatchlist,
   isInWatchlist,
   onDownloadEpisode,
-  downloadedEpisodeIds = []
+  downloadedEpisodeIds = [],
+  onShare
 }) => {
   const seasons = series.seasons || [
     {
@@ -114,8 +116,9 @@ export const SeriesDetailsScreen: React.FC<SeriesDetailsScreenProps> = ({
           </button>
           <button
             type="button"
-            aria-label="Share"
-            className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md ring-1 ring-white/10 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
+            onClick={() => onShare ? onShare(series) : undefined}
+            aria-label="Share series"
+            className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md ring-1 ring-white/10 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer active:scale-95"
           >
             <Share2 size={16} />
           </button>
@@ -189,6 +192,51 @@ export const SeriesDetailsScreen: React.FC<SeriesDetailsScreenProps> = ({
           <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-normal">
             {series.description}
           </p>
+        </div>
+
+        {/* Action Buttons: Watch Series, Watchlist, Share */}
+        <div className="flex items-center gap-2.5 mt-5">
+          {firstEpisode && (
+            <button
+              type="button"
+              onClick={() => onPlayEpisode(series, { ...firstEpisode, seasonNumber: selectedSeasonNumber })}
+              className="flex-1 h-12 rounded-2xl bg-gradient-to-r from-[#FFC72C] to-[#F5B301] text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-[#F5B301]/25 hover:brightness-110 active:scale-[0.98] transition-all cursor-pointer"
+            >
+              <Play size={16} className="fill-slate-950" />
+              <span>Watch Now</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => onToggleWatchlist(series)}
+            className={`h-12 px-4 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-semibold backdrop-blur-md ring-1 transition-all cursor-pointer active:scale-[0.98] ${
+              isInWatchlist
+                ? 'bg-amber-500/15 ring-[#F5B301]/40 text-[#F5B301]'
+                : 'bg-white/5 ring-white/10 text-white hover:bg-white/10'
+            }`}
+          >
+            {isInWatchlist ? (
+              <>
+                <Check size={16} />
+                <span className="hidden sm:inline">Saved</span>
+              </>
+            ) : (
+              <>
+                <Bookmark size={16} />
+                <span className="hidden sm:inline">Watchlist</span>
+              </>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onShare ? onShare(series) : undefined}
+            className="h-12 px-4 rounded-2xl bg-white/5 hover:bg-white/10 ring-1 ring-white/10 text-white flex items-center justify-center gap-1.5 text-xs font-semibold backdrop-blur-md transition-all cursor-pointer active:scale-[0.98]"
+          >
+            <Share2 size={16} className="text-[#F5B301]" />
+            <span>Share</span>
+          </button>
         </div>
 
         {/* Season Download Banner */}

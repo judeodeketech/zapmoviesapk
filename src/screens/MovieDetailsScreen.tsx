@@ -26,6 +26,7 @@ interface MovieDetailsScreenProps {
   isInWatchlist: boolean;
   onDownloadMovie?: (movie: MediaItem) => void;
   isDownloaded?: boolean;
+  onShare?: (movie: MediaItem) => void;
 }
 
 export const MovieDetailsScreen: React.FC<MovieDetailsScreenProps> = ({
@@ -37,7 +38,8 @@ export const MovieDetailsScreen: React.FC<MovieDetailsScreenProps> = ({
   onToggleWatchlist,
   isInWatchlist,
   onDownloadMovie,
-  isDownloaded = false
+  isDownloaded = false,
+  onShare
 }) => {
   const [downloading, setDownloading] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
@@ -86,8 +88,9 @@ export const MovieDetailsScreen: React.FC<MovieDetailsScreenProps> = ({
           </button>
           <button
             type="button"
-            aria-label="Share"
-            className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md ring-1 ring-white/10 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer"
+            onClick={() => onShare ? onShare(movie) : undefined}
+            aria-label="Share movie"
+            className="w-10 h-10 rounded-full bg-black/60 backdrop-blur-md ring-1 ring-white/10 text-white flex items-center justify-center hover:bg-black/80 transition-colors cursor-pointer active:scale-95"
           >
             <Share2 size={16} />
           </button>
@@ -165,20 +168,22 @@ export const MovieDetailsScreen: React.FC<MovieDetailsScreenProps> = ({
           </p>
         </div>
 
-        {/* Key Action Buttons: Watch Now, Watchlist, Download */}
-        <div className="grid grid-cols-2 gap-3 mt-5">
-          <PrimaryButton
-            label="Watch Now"
-            icon={<Play size={16} className="fill-slate-950" />}
-            size="md"
-            fullWidth
-            onClick={() => onPlay(movie)}
-          />
+        {/* Key Action Buttons: Watch Now, Watchlist, Share */}
+        <div className="flex items-center gap-2.5 mt-5">
+          <div className="flex-1">
+            <PrimaryButton
+              label="Watch Now"
+              icon={<Play size={16} className="fill-slate-950" />}
+              size="md"
+              fullWidth
+              onClick={() => onPlay(movie)}
+            />
+          </div>
 
           <button
             type="button"
             onClick={() => onToggleWatchlist(movie)}
-            className={`h-12 rounded-2xl flex items-center justify-center gap-2 text-xs font-semibold backdrop-blur-md ring-1 transition-all cursor-pointer active:scale-[0.98] ${
+            className={`h-12 px-4 rounded-2xl flex items-center justify-center gap-1.5 text-xs font-semibold backdrop-blur-md ring-1 transition-all cursor-pointer active:scale-[0.98] ${
               isInWatchlist
                 ? 'bg-amber-500/15 ring-[#F5B301]/40 text-[#F5B301]'
                 : 'bg-white/5 ring-white/10 text-white hover:bg-white/10'
@@ -187,14 +192,23 @@ export const MovieDetailsScreen: React.FC<MovieDetailsScreenProps> = ({
             {isInWatchlist ? (
               <>
                 <Check size={16} />
-                <span>In Watchlist</span>
+                <span className="hidden sm:inline">Saved</span>
               </>
             ) : (
               <>
                 <Bookmark size={16} />
-                <span>Add to Watchlist</span>
+                <span className="hidden sm:inline">Watchlist</span>
               </>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => onShare ? onShare(movie) : undefined}
+            className="h-12 px-4 rounded-2xl bg-white/5 hover:bg-white/10 ring-1 ring-white/10 text-white flex items-center justify-center gap-1.5 text-xs font-semibold backdrop-blur-md transition-all cursor-pointer active:scale-[0.98]"
+          >
+            <Share2 size={16} className="text-[#F5B301]" />
+            <span>Share</span>
           </button>
         </div>
 

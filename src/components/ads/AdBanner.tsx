@@ -4,6 +4,7 @@ export interface AdBannerProps {
   zoneKey: '383e5798db5ea984cad6739ec47ed810' | '4b4e471c9bb70321a89ff1db782c427e' | string;
   width: number;
   height: number;
+  label?: string;
   className?: string;
 }
 

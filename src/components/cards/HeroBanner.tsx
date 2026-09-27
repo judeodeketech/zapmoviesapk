@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MediaItem } from '../../types';
-import { Play, Plus, Check, Info } from 'lucide-react';
+import { Play, Plus, Check, Info, Share2 } from 'lucide-react';
 import { RatingBadge } from '../common/RatingBadge';
 
 interface HeroBannerProps {
@@ -9,6 +9,7 @@ interface HeroBannerProps {
   onDetails: (item: MediaItem) => void;
   onToggleWatchlist?: (item: MediaItem) => void;
   isInWatchlist?: (id: string) => boolean;
+  onShare?: (item: MediaItem) => void;
 }
 
 export const HeroBanner: React.FC<HeroBannerProps> = ({
@@ -16,7 +17,8 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
   onPlay,
   onDetails,
   onToggleWatchlist,
-  isInWatchlist
+  isInWatchlist,
+  onShare
 }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -114,6 +116,17 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({
                     <span className="hidden sm:inline">Watchlist</span>
                   </>
                 )}
+              </button>
+            )}
+
+            {onShare && (
+              <button
+                type="button"
+                onClick={() => onShare(currentItem)}
+                aria-label="Share spotlight media"
+                className="h-10 w-10 rounded-xl bg-white/10 hover:bg-white/15 text-white backdrop-blur-md flex items-center justify-center active:scale-[0.98] transition-all cursor-pointer shrink-0"
+              >
+                <Share2 size={16} className="text-[#F5B301]" />
               </button>
             )}
 

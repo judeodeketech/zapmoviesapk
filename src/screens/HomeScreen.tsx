@@ -32,6 +32,7 @@ interface HomeScreenProps {
   onToggleWatchlist: (item: MediaItem) => void;
   isInWatchlist: (id: string) => boolean;
   onNavigate: (screen: ScreenType) => void;
+  onShare?: (item: MediaItem) => void;
 }
 
 // Real official TMDB categories for top category tabs
@@ -69,7 +70,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
   onResumeWatching,
   onToggleWatchlist,
   isInWatchlist,
-  onNavigate
+  onNavigate,
+  onShare
 }) => {
   const [selectedCategory, setSelectedCategory] = useState('Home');
   const [categoryMedia, setCategoryMedia] = useState<MediaItem[] | null>(null);
@@ -214,12 +216,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           ) : categoryMedia && categoryMedia.length > 0 ? (
             <>
               {/* Category Top Ad Zone */}
-              <div className="mb-3">
+              <div className="my-1.5 flex justify-center">
                 <AdBanner
                   zoneKey="383e5798db5ea984cad6739ec47ed810"
                   width={320}
                   height={50}
-                  label="Category Featured Sponsor"
                 />
               </div>
 
@@ -262,6 +263,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
             onDetails={onSelectMedia}
             onToggleWatchlist={onToggleWatchlist}
             isInWatchlist={isInWatchlist}
+            onShare={onShare}
           />
 
           {/* Continue Watching Section (Real TMDB Data, Explicit Percentage & Continue Button) */}
@@ -284,12 +286,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
 
           {/* High-Visibility Ad Banner 1 (468x60) */}
-          <div className="px-5 mt-3">
+          <div className="px-3 my-2 flex justify-center">
             <AdBanner
               zoneKey="4b4e471c9bb70321a89ff1db782c427e"
               width={468}
               height={60}
-              label="Featured Spotlight Sponsor"
             />
           </div>
 
@@ -334,12 +335,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
 
           {/* High-Visibility Ad Banner 2 (320x50) */}
-          <div className="px-5 mt-3">
+          <div className="px-3 my-2 flex justify-center">
             <AdBanner
               zoneKey="383e5798db5ea984cad6739ec47ed810"
               width={320}
               height={50}
-              label="Trending Movies Sponsor"
             />
           </div>
 
@@ -384,12 +384,11 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           )}
 
           {/* High-Visibility Ad Banner 3 (468x60) */}
-          <div className="px-5 mt-3">
+          <div className="px-3 my-2 flex justify-center">
             <AdBanner
               zoneKey="4b4e471c9bb70321a89ff1db782c427e"
               width={468}
               height={60}
-              label="Blockbuster Premier Sponsor"
             />
           </div>
 
